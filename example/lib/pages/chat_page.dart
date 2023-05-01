@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_gpt_flutter/chat_gpt_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,24 +48,28 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("ChatGPT")),
+      appBar: (Platform.isAndroid || Platform.isIOS)
+          ? AppBar(title: const Text("ChatGPT 3.5"))
+          : null,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  controller: scrollController,
-                  itemCount: questionAnswers.length,
-                  itemBuilder: (context, index) {
-                    return _buildChatLine(questionAnswers[index]);
-                  },
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16.0),
+                controller: scrollController,
+                itemCount: questionAnswers.length,
+                itemBuilder: (context, index) {
+                  return _buildChatLine(questionAnswers[index]);
+                },
+                separatorBuilder: (context, index) =>
+                    const Divider(height: 16.0, thickness: 1.0),
               ),
-              Row(
+            ),
+            Divider(color: Colors.grey.shade200, height: 1.0, thickness: 1.0),
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
                 children: [
                   Expanded(
                     child: TextFormField(
@@ -91,14 +97,17 @@ class _ChatPageState extends State<ChatPage> {
                   )
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniStartDocked,
       floatingActionButton: Container(
-        margin: EdgeInsets.only(bottom: 64.0),
+        margin: const EdgeInsets.only(bottom: 84.0),
         child: FloatingActionButton.small(
           onPressed: _scrollDown,
+          backgroundColor: Colors.blue,
           child: const Icon(Icons.arrow_downward),
         ),
       ),
@@ -116,6 +125,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildChatLine(QuestionAnswer questionAnswer) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildMyMessage(questionAnswer.question),
         const SizedBox(height: 12),
@@ -130,10 +140,13 @@ class _ChatPageState extends State<ChatPage> {
               Container(
                 width: 200.0,
                 height: 200.0,
-                margin: const EdgeInsets.only(bottom: 16.0),
+                margin: const EdgeInsets.only(top: 16.0, bottom: 16.0),
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(questionAnswer.imgUrls!.first),
+                    image: CachedNetworkImageProvider(
+                        questionAnswer.imgUrls!.first,
+                        maxWidth: 200,
+                        maxHeight: 200),
                     fit: BoxFit.contain,
                   ),
                   color: Colors.red,
@@ -162,67 +175,84 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMyMessage(String message) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.start,
+      crossAxisAlignment: WrapCrossAlignment.start,
       children: [
-        const CircleAvatar(
-          radius: avatarSize / 2,
-          backgroundColor: Colors.grey,
-          foregroundColor: Colors.white,
-          child: Text("You"),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              radius: avatarSize / 2,
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.white,
+              child: Text("You"),
+            ),
+            const SizedBox(width: 16.0, height: 16.0),
+            _buildShareIcons(message),
+          ],
         ),
-        const SizedBox(width: 16.0),
+        const SizedBox(width: 16.0, height: 16.0),
         Container(
-          margin: const EdgeInsets.only(top: 8.0),
+          constraints: BoxConstraints(
+            maxWidth: (MediaQuery.of(context).size.width - avatarSize * 2),
+          ),
           decoration: const BoxDecoration(
-              color: Colors.green,
+              color: Colors.grey,
               borderRadius:
                   BorderRadius.all(Radius.circular(chatMessageRadius))),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
               message,
+              softWrap: true,
               style: const TextStyle(color: Colors.white),
             ),
           ),
         ),
-        _buildShareIcons(message),
       ],
     );
   }
 
   Widget _buildGptMessage(String message) {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.start,
       children: [
-        if (message.isNotEmpty) _buildShareIcons(message),
         if (message.isNotEmpty)
           Container(
-            margin: const EdgeInsets.only(top: 8.0),
+            constraints: BoxConstraints(
+              maxWidth: (MediaQuery.of(context).size.width - avatarSize * 2),
+            ),
             decoration: const BoxDecoration(
-                color: Colors.blue,
+                color: Color(0xFF74AA9C),
                 borderRadius:
                     BorderRadius.all(Radius.circular(chatMessageRadius))),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 message,
+                softWrap: true,
                 style: const TextStyle(color: Colors.white),
               ),
             ),
           ),
-        const SizedBox(width: 16.0),
-        Container(
-          margin: const EdgeInsets.only(right: 16.0),
-          child: SvgPicture.asset(
-            'assets/images/chat_gpt_logo.svg',
-            semanticsLabel: 'GPT Logo',
-            height: avatarSize,
-            width: avatarSize,
-          ),
+        if (message.isNotEmpty) const SizedBox(width: 16.0, height: 16.0),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/images/chat_gpt_logo.svg',
+              semanticsLabel: 'GPT Logo',
+              height: avatarSize,
+              width: avatarSize,
+            ),
+            if (message.isNotEmpty) const SizedBox(width: 16.0, height: 16.0),
+            if (message.isNotEmpty) _buildShareIcons(message),
+          ],
         ),
       ],
     );
@@ -230,6 +260,9 @@ class _ChatPageState extends State<ChatPage> {
 
   _sendMessage() async {
     final question = textEditingController.text;
+    if (question.isEmpty) {
+      return;
+    }
     if (question.toLowerCase().startsWith('generate image: ')) {
       setState(() {
         textEditingController.clear();
@@ -319,9 +352,9 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildShareIcons(String message) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        const SizedBox(width: 8),
         InkWell(
             onTap: () {
               Share.share(message);
@@ -338,7 +371,6 @@ class _ChatPageState extends State<ChatPage> {
             },
             child:
                 const Icon(Icons.copy_rounded, size: 16, color: Colors.grey)),
-        const SizedBox(width: 8),
       ],
     );
   }

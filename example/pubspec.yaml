@@ -11,12 +11,13 @@ dependencies:
     sdk: flutter
   chat_gpt_flutter:
     path: ../
-  http: ^0.13.5
+  http: ^0.13.6
   file_picker: ^5.2.11
   share_plus: ^6.3.4
   flutter_svg: ^2.0.5
   window_manager: ^0.3.2
   path_provider: ^2.0.14
+  cached_network_image: ^3.2.3
 
 dev_dependencies:
   flutter_test:
