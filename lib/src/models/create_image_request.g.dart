@@ -9,8 +9,8 @@ part of 'create_image_request.dart';
 CreateImageRequest _$CreateImageRequestFromJson(Map<String, dynamic> json) =>
     CreateImageRequest(
       prompt: json['prompt'] as String,
-      n: json['n'] as int?,
-      size: json['size'] as String?,
+      n: json['n'] as int,
+      size: json['size'] as String,
       responseFormat: json['response_format'] as String? ?? 'url',
     );
 

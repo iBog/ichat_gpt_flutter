@@ -13,6 +13,7 @@ CompletionRequest _$CompletionRequestFromJson(Map<String, dynamic> json) =>
       messages: (json['messages'] as List<dynamic>)
           .map((e) => Message.fromJson(e as Map<String, dynamic>))
           .toList(),
+      prompt: json['prompt'] as String?,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0,
       topP: (json['top_p'] as num?)?.toDouble(),
       n: json['n'] as int?,
@@ -24,7 +25,8 @@ CompletionRequest _$CompletionRequestFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CompletionRequestToJson(CompletionRequest instance) =>
     <String, dynamic>{
       'model': _$ChatGptModelEnumMap[instance.model]!,
-      'messages': instance.messages,
+      if (instance.messages!=null) 'messages': instance.messages,
+      if (instance.prompt!=null) 'prompt': instance.prompt,
       'temperature': instance.temperature,
       'top_p': instance.topP,
       'n': instance.n,
@@ -49,4 +51,7 @@ const _$ChatGptModelEnumMap = {
   ChatGptModel.curie: 'curie',
   ChatGptModel.textCurie001: 'text-curie-001',
   ChatGptModel.gpt35Turbo: 'gpt-3.5-turbo',
+  ChatGptModel.gpt4: 'gpt-4',
+  ChatGptModel.gpt40314: 'gpt-4-0314',
+  ChatGptModel.gpt432k: 'gpt-4-32k',
 };

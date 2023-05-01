@@ -8,21 +8,23 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 const openAiBaseUrl = 'https://api.openai.com/v1';
 const chatCompletionsEndPoint = '/chat/completions';
+const completionsEndPoint = '/completions';
 const imageGenerationsEndPoint = '/images/generations';
 const imageEditsEndPoint = '/images/edits';
 const imageVariationsEndPoint = '/images/variations';
 
 class ChatGpt {
   final String apiKey;
-  final int? connectTimeout;
-  final int? sendTimeout;
-  final int? receiveTimeout;
+  final Duration? connectTimeout;
+  final Duration? sendTimeout;
+  final Duration? receiveTimeout;
 
-  ChatGpt(
-      {required this.apiKey,
-      this.connectTimeout,
-      this.sendTimeout,
-      this.receiveTimeout});
+  ChatGpt({
+    required this.apiKey,
+    this.connectTimeout,
+    this.sendTimeout,
+    this.receiveTimeout,
+  });
 
   Future<AsyncCompletionResponse?> createChatCompletion(
     CompletionRequest request,
@@ -38,11 +40,49 @@ class ChatGpt {
     return null;
   }
 
+  Future<AsyncCompletionResponse?> createCompletion(
+    CompletionRequest request,
+  ) async {
+    final response = await dio.post(
+      completionsEndPoint,
+      data: json.encode(request.toJson()),
+    );
+    final data = response.data;
+    if (data != null) {
+      return AsyncCompletionResponse.fromJson(data);
+    }
+    return null;
+  }
+
   Future<Stream<StreamCompletionResponse>?> createChatCompletionStream(
     CompletionRequest request,
   ) async {
     final response = await dio.post<ResponseBody>(
       chatCompletionsEndPoint,
+      data: json.encode(request.toJson()),
+      options: Options(
+        headers: {
+          "Accept": "text/event-stream",
+          "Cache-Control": "no-cache",
+        },
+        responseType: ResponseType.stream,
+      ),
+    );
+
+    final stream = response.data?.stream
+        .transform(unit8Transformer)
+        .transform(const Utf8Decoder())
+        .transform(const LineSplitter())
+        .transform(responseTransformer);
+
+    return stream;
+  }
+
+  Future<Stream<StreamCompletionResponse>?> createCompletionStream(
+    CompletionRequest request,
+  ) async {
+    final response = await dio.post<ResponseBody>(
+      completionsEndPoint,
       data: json.encode(request.toJson()),
       options: Options(
         headers: {

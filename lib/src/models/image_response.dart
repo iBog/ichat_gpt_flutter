@@ -10,6 +10,9 @@ class ImageResponse {
 
   ImageResponse({this.created, this.data});
 
+  bool isEmpty() {
+    return data==null || data!.isEmpty;
+  }
   factory ImageResponse.fromJson(Map<String, dynamic> data) =>
       _$ImageResponseFromJson(data);
 
