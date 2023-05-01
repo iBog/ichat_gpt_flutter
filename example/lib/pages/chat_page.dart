@@ -10,7 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/question_answer.dart';
 import '../tools/utils.dart';
 
-const apiKey = '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';
+const apiKey = 'GPT API KEY';
 const double chatMessageRadius = 16.0;
 const double avatarSize = 48.0;
 
