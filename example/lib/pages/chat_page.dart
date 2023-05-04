@@ -165,7 +165,8 @@ class _ChatPageState extends State<ChatPage> {
                       context,
                       questionAnswer.imgUrls!.first,
                       questionAnswer.question
-                          .replaceFirst('generate image: ', ''));
+                          .replaceFirst('generate image: ', '')
+                          .replaceFirst("draw: ", ''));
                 },
               ),
             ],
@@ -263,7 +264,8 @@ class _ChatPageState extends State<ChatPage> {
     if (question.isEmpty) {
       return;
     }
-    if (question.toLowerCase().startsWith('generate image: ')) {
+    if (question.toLowerCase().startsWith('generate image: ') ||
+        question.toLowerCase().startsWith('draw: ')) {
       setState(() {
         textEditingController.clear();
         loading = true;
@@ -274,7 +276,9 @@ class _ChatPageState extends State<ChatPage> {
           ),
         );
       });
-      String prompt = question.replaceFirst('generate image: ', '');
+      String prompt = question
+          .replaceFirst('generate image: ', '')
+          .replaceFirst('draw: ', '');
       final imageRequest = CreateImageRequest(prompt: prompt);
       ImageResponse? imageResponse = await _createImage(imageRequest);
       if (imageResponse != null && !imageResponse.isEmpty()) {
