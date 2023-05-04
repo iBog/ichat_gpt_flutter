@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -5,10 +7,12 @@ import 'pages/chat_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WindowManager.instance.ensureInitialized();
-  windowManager.waitUntilReadyToShow().then((_) async {
-    await windowManager.setTitle('ChatGPT 3.5');
-  });
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    await WindowManager.instance.ensureInitialized();
+    windowManager.waitUntilReadyToShow().then((_) async {
+      await windowManager.setTitle('ChatGPT 3.5');
+    });
+  }
   runApp(const MyApp());
 }
 
@@ -18,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ChatGPT Client App',
+      title: 'ChatGPT 3.5',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
